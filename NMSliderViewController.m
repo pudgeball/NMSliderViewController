@@ -1,37 +1,34 @@
 //
-//  TouchViewController.m
-//  NMSlider
+//  NMSliderViewController.m
+//
 //
 //  Created by Nick McGuire on 2012-12-08.
 //  Copyright (c) 2012 RND Consulting. All rights reserved.
 //
 
-#import "TouchViewController.h"
-#import "NMScrollView.h"
-#import "GreenViewController.h"
+#import "NMSliderViewController.h"
 
 typedef NS_ENUM(NSInteger, SlideState) {
 	SlideStateOpen,
 	SlideStateClosed
 };
 
-@interface TouchViewController ()
+@interface NMSliderViewController ()
 
 @property (nonatomic) CGPoint startingPoint;
 
-@property (strong, nonatomic) UINavigationController *navController;
-@property (strong, nonatomic) UIViewController *viewController;
+@property (strong, nonatomic) UINavigationController *navigationController;
+@property (strong, nonatomic) UIViewController *topViewController;
+@property (strong, nonatomic) UIViewController *bottomViewController;
 @property (nonatomic) SlideState currentState;
 
-- (void)setState:(SlideState )state;
+- (void)setState:(SlideState)state forSliderView:(UIView *)view;
 
 @end
 
-@implementation TouchViewController
+@implementation NMSliderViewController
 
-@synthesize navController, viewController;
-
-- (id)init
+- (id)initWithTopViewController:(UIViewController *)topViewController andBottomViewController:(UIViewController *)bottomViewController
 {
 	self = [super init];
     if (self)
@@ -42,84 +39,57 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapView:)];
 		[tapGesture setDelegate:self];
 		
-		UITableViewController *tableViewController = [[UITableViewController alloc] initWithStyle:UITableViewStylePlain];
-		//UINavigationController *tableNav = [[UINavigationController alloc] initWithRootViewController:tableViewController];
-		tableViewController.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
-		[[tableViewController tableView] setDelegate:self];
-		[[tableViewController tableView] setDataSource:self];
+		_topViewController = topViewController;
 		
-		viewController = [[UIViewController alloc] init];
-		[[viewController view] setBackgroundColor:[UIColor redColor]];
-		[viewController addObserver:self forKeyPath:@"view.frame" options:NSKeyValueObservingOptionNew context:NULL];
+		_bottomViewController = bottomViewController;
+		[[_bottomViewController view] setFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
 		
-		navController = [[UINavigationController alloc] initWithRootViewController:viewController];
-		navController.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
+		_navigationController = [[UINavigationController alloc] initWithRootViewController:_topViewController];
+		_navigationController.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
 		
-		
-		viewController.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(push:)];
-		viewController.navigationItem.title = @"Zomg Title";
-		
-		UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, 320, self.view.frame.size.height)];
-		[scrollView setContentSize:CGSizeMake(320, 1000)];
-
-		[scrollView addGestureRecognizer:panGesture];
-		[scrollView addGestureRecognizer:tapGesture];
-		
-		[[navController view] addGestureRecognizer:panGesture];
-		[[navController view] addGestureRecognizer:tapGesture];
-		
-		[scrollView setBackgroundColor:[UIColor blueColor]];
-		
-		UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 320, self.view.frame.size.height) style:UITableViewStyleGrouped];
-		[tableView setDataSource:self];
-		[tableView setDelegate:self];
+		[[_navigationController view] addGestureRecognizer:panGesture];
+		[[_navigationController view] addGestureRecognizer:tapGesture];
 		
 		_currentState = SlideStateClosed;
 		
-		[[self view] addSubview:tableViewController.view];
-		[[self view] addSubview:navController.view];
+		[[self view] addSubview:[_bottomViewController view]];
+		[[self view] addSubview:[_navigationController view]];
 		
-		_startingPoint = [scrollView center];
+		_startingPoint = [[_navigationController view] center];
     }
     return self;
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-	if ([keyPath isEqualToString:@"view.frame"])
-	{
-		NSLog(@"Frame %f", [viewController view].frame.origin.x);
-	}
-}
-
--(void)push:(id)sender
-{
-	GreenViewController *test = [[GreenViewController alloc] init];
-	[[viewController navigationController] pushViewController:test animated:YES];
-}
-
-- (void)setState:(SlideState)state
+- (void)setState:(SlideState)state forSliderView:(UIView *)view
 {
 	if (state == SlideStateOpen)
 	{
 		_currentState = state;
+		NSTimeInterval interval = 0.5 * ([view frame].origin.x / 320);
+		[UIView animateWithDuration:interval animations:^{
+			[view setFrame:CGRectMake(320 - 40, view.frame.origin.y, view.frame.size.width, view.frame.size.height)];
+		}completion:NULL];
 	}
 	else if (state == SlideStateClosed)
 	{
 		_currentState = state;
+		NSTimeInterval interval = 0.5 * ([view frame].origin.x / 320);
+		[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
+			[view setCenter:_startingPoint];
+		} completion:NULL];
 	}
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
+	
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+	
 }
 
 - (void)panPiece:(UIPanGestureRecognizer *)gestureRecognizer
@@ -153,41 +123,45 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	{
 		if (velocity.x > 1000)
 		{
+			/*
 			NSTimeInterval interval = 0.5 * ([piece frame].origin.x / 320);
 			[UIView animateWithDuration:interval animations:^{
 				[piece setFrame:CGRectMake(320 - 40, piece.frame.origin.y, piece.frame.size.width, piece.frame.size.height)];
-			}completion:NULL];
-			[self setState:SlideStateOpen];
+			}completion:NULL];*/
+			[self setState:SlideStateOpen forSliderView:piece];
 		}
 		else if (velocity.x < -1000)
 		{
+			/*
 			NSTimeInterval interval = 0.5 * ([piece frame].origin.x / 320);
 			[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
 				[piece setCenter:_startingPoint];
-			} completion:NULL];
+			} completion:NULL];*/
 			
-			[self setState:SlideStateClosed];
+			[self setState:SlideStateClosed forSliderView:piece];
 		}
 		else
 		{
-			NSLog(@"velocity");
 			if ([piece frame].origin.x > 160)
 			{
+				/*
 				NSTimeInterval interval = 0.5 * ([piece frame].origin.x / 320);
 				[UIView animateWithDuration:interval animations:^{
 					[piece setFrame:CGRectMake(320 - 40, piece.frame.origin.y, piece.frame.size.width, piece.frame.size.height)];
 				}completion:NULL];
+				 */
 				
-				[self setState:SlideStateOpen];
+				[self setState:SlideStateOpen forSliderView:piece];
 			}
 			else
 			{
+				/*
 				NSTimeInterval interval = 0.7 * ([piece frame].origin.x / 320);
 				[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
 					[piece setCenter:_startingPoint];
 				} completion:NULL];
-				
-				[self setState:SlideStateClosed];
+				*/
+				[self setState:SlideStateClosed forSliderView:piece];
 			}
 		}
 	}
@@ -195,23 +169,16 @@ typedef NS_ENUM(NSInteger, SlideState) {
 
 - (void)tapView:(UITapGestureRecognizer *)tapGesture
 {
-	UIView *piece = [tapGesture view];
+	UIView *view = [tapGesture view];
 	
-	NSTimeInterval interval = 0.5 * ([piece frame].origin.x / 320);
+	NSTimeInterval interval = 0.5 * ([view frame].origin.x / 320);
 	[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
-		[piece setCenter:_startingPoint];
+		[view setCenter:_startingPoint];
 	} completion:NULL];
 }
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-    return 1;
-}
-
 -(BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
-{
-	NSLog(@"ZOMG: ");
-	
+{	
 	if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]])
 	{
 		UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)gestureRecognizer;
@@ -223,12 +190,10 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	{
 		if (_currentState == SlideStateClosed)
 		{
-			NSLog(@"NO");
 			return NO;
 		}
 		else if (_currentState == SlideStateOpen)
 		{
-			NSLog(@"YES");
 			return YES;
 		}
 	}
