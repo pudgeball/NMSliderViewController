@@ -21,6 +21,8 @@ typedef NS_ENUM(NSInteger, SlideState) {
 @property (strong, nonatomic) UIViewController *topViewController;
 @property (strong, nonatomic) UIViewController *bottomViewController;
 @property (nonatomic) SlideState currentState;
+@property (nonatomic) CGRect screenBounds;
+@property (nonatomic) NSInteger distanceFromLeft;
 
 - (void)setState:(SlideState)state forSliderView:(UIView *)view;
 
@@ -33,6 +35,14 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	self = [super init];
     if (self)
 	{
+		_screenBounds = [[UIScreen mainScreen] bounds];
+		
+		NSString *deviceModel = [[UIDevice currentDevice] model];
+		
+		NSLog(@"deviceModel: %@", deviceModel);
+		
+		_distanceFromLeft = 280.0f;
+		
 		UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panPiece:)];
 		[panGesture setDelegate:self];
 		
@@ -56,8 +66,19 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		[[self view] addSubview:[_navigationController view]];
 		
 		_startingPoint = [[_navigationController view] center];
+		NSLog(@"Current Center: %f, %f", _startingPoint.x, _startingPoint.y);
     }
     return self;
+}
+
+- (void)setTopViewController:(UIViewController *)topViewController
+{
+	[[topViewController view] setFrame:CGRectMake(0, 0, topViewController.view.frame.size.width, topViewController.view.frame.size.height)];
+
+	_topViewController = topViewController;
+	
+	[_navigationController setViewControllers:@[ _topViewController ]];
+	[self setState:SlideStateClosed forSliderView:_navigationController.view];
 }
 
 - (void)setState:(SlideState)state forSliderView:(UIView *)view
@@ -65,15 +86,16 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	if (state == SlideStateOpen)
 	{
 		_currentState = state;
-		NSTimeInterval interval = 0.5 * ([view frame].origin.x / 320);
+		NSTimeInterval interval = 0.5 * ([view frame].origin.x / [view frame].size.width);
+		NSLog(@"Should open to: %f from width: %f", [view frame].size.width - _distanceFromLeft, [view frame].size.width);
 		[UIView animateWithDuration:interval animations:^{
-			[view setFrame:CGRectMake(320 - 40, view.frame.origin.y, view.frame.size.width, view.frame.size.height)];
+			[view setFrame:CGRectMake(_distanceFromLeft, view.frame.origin.y, view.frame.size.width, view.frame.size.height)];
 		}completion:NULL];
 	}
 	else if (state == SlideStateClosed)
 	{
 		_currentState = state;
-		NSTimeInterval interval = 0.5 * ([view frame].origin.x / 320);
+		NSTimeInterval interval = 0.5 * ([view frame].origin.x / [view frame].size.width);
 		[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
 			[view setCenter:_startingPoint];
 		} completion:NULL];
@@ -144,10 +166,7 @@ typedef NS_ENUM(NSInteger, SlideState) {
 {
 	UIView *view = [tapGesture view];
 	
-	NSTimeInterval interval = 0.5 * ([view frame].origin.x / 320);
-	[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
-		[view setCenter:_startingPoint];
-	} completion:NULL];
+	[self setState:SlideStateClosed forSliderView:view];
 }
 
 -(BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
@@ -177,6 +196,23 @@ typedef NS_ENUM(NSInteger, SlideState) {
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
 	return YES;
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+{
+	UIView *view = [_navigationController view];
+	NSLog(@"Current Center: %f, %f", view.center.x, view.center.y);
+	
+	if (_currentState == SlideStateClosed)
+	{
+		_startingPoint = CGPointMake([view center].x, [view center].y);
+	}
+	else if (_currentState == SlideStateOpen)
+	{
+		_startingPoint = CGPointMake([view center].x - _distanceFromLeft, [view center].y);
+	}
+	
+	NSLog(@"Current Center: %f, %f", _startingPoint.x, _startingPoint.y);
 }
 
 

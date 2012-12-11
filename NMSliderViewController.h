@@ -11,5 +11,6 @@
 @interface NMSliderViewController : UIViewController <UIGestureRecognizerDelegate>
 
 - (id)initWithTopViewController:(UIViewController *)topViewController andBottomViewController:(UIViewController *)bottomViewController;
+- (void)setTopViewController:(UIViewController *)topViewController;
 
 @end
