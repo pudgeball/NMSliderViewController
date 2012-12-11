@@ -94,74 +94,47 @@ typedef NS_ENUM(NSInteger, SlideState) {
 
 - (void)panPiece:(UIPanGestureRecognizer *)gestureRecognizer
 {
-    UIView *piece = [gestureRecognizer view];
-	CGPoint translation = [gestureRecognizer translationInView:[piece superview]];
-	CGPoint velocity = [gestureRecognizer velocityInView:[piece superview]];
-	
-	//NSLog(@"Velocity: %f", velocity.x);
+    UIView *view = [gestureRecognizer view];
+	CGPoint translation = [gestureRecognizer translationInView:[view superview]];
+	CGPoint velocity = [gestureRecognizer velocityInView:[view superview]];
     
     if ([gestureRecognizer state] == UIGestureRecognizerStateBegan || [gestureRecognizer state] == UIGestureRecognizerStateChanged)
 	{
-		//NSLog(@"Center: %f", translation.x);
-		if ([piece center].x == _startingPoint.x && translation.x < 0.0)
+		if ([view center].x == _startingPoint.x && translation.x < 0.0) return;
+		
+		if ([view center].x + translation.x < _startingPoint.x)
 		{
-			return;
+			translation = CGPointMake(_startingPoint.x - [view center].x, translation.y);
 		}
-		else
-		{
-			if ([piece center].x + translation.x < _startingPoint.x)
-			{
-				translation = CGPointMake(_startingPoint.x - [piece center].x, translation.y);
-			}
 			
-			[piece setCenter:CGPointMake([piece center].x + translation.x, [piece center].y)];
-			[gestureRecognizer setTranslation:CGPointMake(0.1, 0.0) inView:[piece superview]];
-		}
+		[view setCenter:CGPointMake([view center].x + translation.x, [view center].y)];
+		[gestureRecognizer setTranslation:CGPointMake(0.1, 0.0) inView:[view superview]];
+		
     }
 	
 	if ([gestureRecognizer state] == UIGestureRecognizerStateEnded)
 	{
 		if (velocity.x > 1000)
 		{
-			/*
-			NSTimeInterval interval = 0.5 * ([piece frame].origin.x / 320);
-			[UIView animateWithDuration:interval animations:^{
-				[piece setFrame:CGRectMake(320 - 40, piece.frame.origin.y, piece.frame.size.width, piece.frame.size.height)];
-			}completion:NULL];*/
-			[self setState:SlideStateOpen forSliderView:piece];
+			[self setState:SlideStateOpen forSliderView:view];
 		}
 		else if (velocity.x < -1000)
 		{
-			/*
-			NSTimeInterval interval = 0.5 * ([piece frame].origin.x / 320);
-			[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
-				[piece setCenter:_startingPoint];
-			} completion:NULL];*/
-			
-			[self setState:SlideStateClosed forSliderView:piece];
+			[self setState:SlideStateClosed forSliderView:view];
 		}
 		else
 		{
-			if ([piece frame].origin.x > 160)
+			if ([view center].x == _startingPoint.x)
 			{
-				/*
-				NSTimeInterval interval = 0.5 * ([piece frame].origin.x / 320);
-				[UIView animateWithDuration:interval animations:^{
-					[piece setFrame:CGRectMake(320 - 40, piece.frame.origin.y, piece.frame.size.width, piece.frame.size.height)];
-				}completion:NULL];
-				 */
-				
-				[self setState:SlideStateOpen forSliderView:piece];
+				[self setCurrentState:SlideStateClosed];
+			}
+			else if ([view frame].origin.x > 160)
+			{
+				[self setState:SlideStateOpen forSliderView:view];
 			}
 			else
 			{
-				/*
-				NSTimeInterval interval = 0.7 * ([piece frame].origin.x / 320);
-				[UIView animateWithDuration:interval delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
-					[piece setCenter:_startingPoint];
-				} completion:NULL];
-				*/
-				[self setState:SlideStateClosed forSliderView:piece];
+				[self setState:SlideStateClosed forSliderView:view];
 			}
 		}
 	}
@@ -205,25 +178,6 @@ typedef NS_ENUM(NSInteger, SlideState) {
 {
 	return YES;
 }
-
--(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	static NSString *cellID = @"cell";
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellID];
-	
-	if (cell == nil)
-	{
-		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellID];
-	}
-	
-	cell.textLabel.text = @"Text";
-	return cell;
-}
-- (NSInteger )tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-	return 20;
-}
-
 
 
 @end
