@@ -71,11 +71,19 @@ typedef NS_ENUM(NSInteger, SlideState) {
 
 - (void)setTopViewController:(UIViewController *)topViewController
 {
-	[[topViewController view] setFrame:CGRectMake(0, 0, CGRectGetWidth(topViewController.view.frame), CGRectGetHeight(topViewController.view.frame))];
+	if (_topViewController != topViewController)
+	{
+		[[topViewController view] setFrame:CGRectMake(0, 0, CGRectGetWidth(topViewController.view.frame), CGRectGetHeight(topViewController.view.frame))];
 
-	_topViewController = topViewController;
+		_topViewController = topViewController;
 	
-	[_navigationController setViewControllers:@[ _topViewController ]];
+		[_navigationController setViewControllers:@[ _topViewController ]];
+	}
+	else
+	{
+		[[_topViewController navigationController] popToRootViewControllerAnimated:YES];
+	}
+	
 	[self setState:SlideStateClosed forSliderView:_navigationController.view];
 }
 
@@ -87,12 +95,12 @@ typedef NS_ENUM(NSInteger, SlideState) {
 - (void)setState:(SlideState)state forSliderView:(UIView *)view withAnimationOption:(UIViewAnimationOptions)options
 {
 	_currentState = state;
-	NSTimeInterval interval = 0.5 * ([view frame].origin.x / CGRectGetWidth([view frame]));
+	NSTimeInterval interval = 0.5 * (CGRectGetMinX([view frame]) / CGRectGetWidth([view frame]));
 	
 	if (state == SlideStateOpen)
 	{
 		[UIView animateWithDuration:interval delay:0.0 options:options animations:^{
-			[view setFrame:CGRectMake(_distanceFromLeft, view.frame.origin.y, CGRectGetWidth([view frame]), CGRectGetHeight([view frame]))];
+			[view setFrame:CGRectMake(_distanceFromLeft, CGRectGetMinY([view frame]), CGRectGetWidth([view frame]), CGRectGetHeight([view frame]))];
 		}completion:NULL];
 	}
 	else if (state == SlideStateClosed)
@@ -111,7 +119,6 @@ typedef NS_ENUM(NSInteger, SlideState) {
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-	
 }
 
 - (void)panPiece:(UIPanGestureRecognizer *)gestureRecognizer
@@ -133,8 +140,7 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		[gestureRecognizer setTranslation:CGPointMake(0.1, 0.0) inView:[view superview]];
 		
     }
-	
-	if ([gestureRecognizer state] == UIGestureRecognizerStateEnded)
+	else if ([gestureRecognizer state] == UIGestureRecognizerStateEnded)
 	{
 		if (velocity.x > _minimumVelocity)
 		{
@@ -204,11 +210,11 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	
 	if (_currentState == SlideStateClosed)
 	{
-		_startingPoint = CGPointMake([view center].x, [view center].y);
+		_startingPoint = CGPointMake(CGRectGetMidX([view frame]), CGRectGetMidY([view frame]));
 	}
 	else if (_currentState == SlideStateOpen)
 	{
-		_startingPoint = CGPointMake([view center].x - _distanceFromLeft, [view center].y);
+		_startingPoint = CGPointMake(CGRectGetMidX([view frame]) - _distanceFromLeft, CGRectGetMidY([view frame]));
 	}
 }
 
