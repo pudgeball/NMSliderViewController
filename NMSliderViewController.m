@@ -29,10 +29,13 @@ typedef NS_ENUM(NSInteger, SlideState) {
 
 - (void)setState:(SlideState)state forSliderView:(UIView *)view;
 - (void)setState:(SlideState)state forSliderView:(UIView *)view withAnimationOption:(UIViewAnimationOptions)options;
+- (void)setState:(SlideState)state forSliderView:(UIView *)view withVelocity:(CGFloat)velocity withAnimationOption:(UIViewAnimationOptions)options withCompletionBlock:(void (^) (BOOL finished))completion;
 
 @end
 
 @implementation NMSliderViewController
+
+#pragma mark - Initializers
 
 - (id)initWithTopViewController:(UIViewController *)topViewController andBottomViewController:(UIViewController *)bottomViewController
 {
@@ -65,12 +68,22 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		[[self view] addSubview:[_navigationController view]];
 		
 		_startingPoint = [[_navigationController view] center];
+		
+		_navigationController.view.layer.shadowColor = [UIColor blackColor].CGColor;
+		_navigationController.view.layer.shadowOffset = CGSizeMake(-10.0, 0.0);
+		_navigationController.view.layer.shadowOpacity = 0.5;
+		_navigationController.view.layer.shadowRadius = 5.0;
+		_navigationController.view.clipsToBounds = NO;
     }
     return self;
 }
 
+#pragma mark - NMSliderViewController Methods
+
 - (void)setTopViewController:(UIViewController *)topViewController
 {
+	void (^completion)(BOOL finished);
+	
 	if (_topViewController != topViewController)
 	{
 		[[topViewController view] setFrame:CGRectMake(0, 0, CGRectGetWidth(topViewController.view.frame), CGRectGetHeight(topViewController.view.frame))];
@@ -78,48 +91,114 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		_topViewController = topViewController;
 	
 		[_navigationController setViewControllers:@[ _topViewController ]];
+		
+		completion = NULL;
 	}
 	else
 	{
-		[[_topViewController navigationController] popToRootViewControllerAnimated:YES];
+		completion = ^ void (BOOL finished) {
+			[[_topViewController navigationController] popToRootViewControllerAnimated:YES];
+		};
 	}
 	
-	[self setState:SlideStateClosed forSliderView:_navigationController.view];
+	[self setState:SlideStateClosed forSliderView:_navigationController.view withVelocity:1.5 withAnimationOption:UIViewAnimationOptionCurveEaseOut withCompletionBlock:completion];
 }
+
+#pragma mark - SlideState Methods
 
 - (void)setState:(SlideState)state forSliderView:(UIView *)view
 {
-	[self setState:state forSliderView:view withAnimationOption:UIViewAnimationOptionCurveEaseOut];
+	[self setState:state forSliderView:view withVelocity:1.0 withAnimationOption:UIViewAnimationOptionCurveEaseOut withCompletionBlock:NULL];
 }
 
 - (void)setState:(SlideState)state forSliderView:(UIView *)view withAnimationOption:(UIViewAnimationOptions)options
 {
+	[self setState:state forSliderView:view withVelocity:1.0 withAnimationOption:options withCompletionBlock:NULL];
+}
+
+- (void)setState:(SlideState)state forSliderView:(UIView *)view withVelocity:(CGFloat)velocity withAnimationOption:(UIViewAnimationOptions)options withCompletionBlock:(void (^) (BOOL finished))completion
+{
 	_currentState = state;
-	NSTimeInterval interval = 0.5 * (CGRectGetMinX([view frame]) / CGRectGetWidth([view frame]));
+	NSTimeInterval interval = (0.5 * (CGRectGetMinX([view frame]) / CGRectGetWidth([view frame]))) / velocity;
 	
 	if (state == SlideStateOpen)
 	{
 		[UIView animateWithDuration:interval delay:0.0 options:options animations:^{
 			[view setFrame:CGRectMake(_distanceFromLeft, CGRectGetMinY([view frame]), CGRectGetWidth([view frame]), CGRectGetHeight([view frame]))];
-		}completion:NULL];
+		}completion:completion];
 	}
 	else if (state == SlideStateClosed)
 	{
 		[UIView animateWithDuration:interval delay:0.0 options:options animations:^{
 			[view setCenter:_startingPoint];
-		} completion:NULL];
+		} completion:completion];
 	}
 }
+
+#pragma mark - UIView Methods
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 }
 
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+	_navigationController.view.layer.shouldRasterize = YES;
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+{
+	UIView *view = [_navigationController view];
+	_navigationController.view.layer.shouldRasterize = NO;
+	
+	if (_currentState == SlideStateClosed)
+	{
+		_startingPoint = CGPointMake(CGRectGetMidX([view frame]), CGRectGetMidY([view frame]));
+	}
+	else if (_currentState == SlideStateOpen)
+	{
+		_startingPoint = CGPointMake(CGRectGetMidX([view frame]) - _distanceFromLeft, CGRectGetMidY([view frame]));
+	}
+}
+
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
 }
+
+#pragma mark - UIGestureRecognizer Delegate Methods
+
+-(BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+	if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]])
+	{
+		UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)gestureRecognizer;
+		CGPoint translation = [panGesture translationInView:self.view];
+		BOOL isHorizontalPan = (fabsf(translation.x) > fabs(translation.y));
+		return isHorizontalPan;
+	}
+	else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]])
+	{
+		if (_currentState == SlideStateClosed)
+		{
+			return NO;
+		}
+		else if (_currentState == SlideStateOpen)
+		{
+			return YES;
+		}
+	}
+	
+	return NO;
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+	return NO;
+}
+
+#pragma mark - UIGestureRecognizer Methods
 
 - (void)panPiece:(UIPanGestureRecognizer *)gestureRecognizer
 {
@@ -174,49 +253,5 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	
 	[self setState:SlideStateClosed forSliderView:view];
 }
-
--(BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
-{	
-	if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]])
-	{
-		UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)gestureRecognizer;
-		CGPoint translation = [panGesture translationInView:self.view];
-		BOOL isHorizontalPan = (fabsf(translation.x) > fabs(translation.y));
-		return isHorizontalPan;
-	}
-	else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]])
-	{
-		if (_currentState == SlideStateClosed)
-		{
-			return NO;
-		}
-		else if (_currentState == SlideStateOpen)
-		{
-			return YES;
-		}
-	}
-	
-	return NO;
-}
-
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
-{
-	return NO;
-}
-
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
-{
-	UIView *view = [_navigationController view];
-	
-	if (_currentState == SlideStateClosed)
-	{
-		_startingPoint = CGPointMake(CGRectGetMidX([view frame]), CGRectGetMidY([view frame]));
-	}
-	else if (_currentState == SlideStateOpen)
-	{
-		_startingPoint = CGPointMake(CGRectGetMidX([view frame]) - _distanceFromLeft, CGRectGetMidY([view frame]));
-	}
-}
-
 
 @end
