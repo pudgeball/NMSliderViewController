@@ -74,7 +74,7 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		_navigationController.view.layer.shadowOpacity = 0.5;
 		_navigationController.view.layer.shadowRadius = 5.0;
 		_navigationController.view.layer.shouldRasterize = YES;
-		_navigationController.view.layer.rasterizationScale = [UIScreen mainScreen].scale;4
+		_navigationController.view.layer.rasterizationScale = [UIScreen mainScreen].scale;
 		_navigationController.view.layer.shadowPath = [UIBezierPath bezierPathWithRect:_navigationController.view.layer.bounds].CGPath;
 		_navigationController.view.clipsToBounds = NO;
     }

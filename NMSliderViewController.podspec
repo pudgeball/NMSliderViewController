@@ -34,7 +34,11 @@ Pod::Spec.new do |s|
 
   # Specify the location from where the source should be retrieved.
   #
+<<<<<<< HEAD
   s.source       = { :git => "https://github.com/pudgeball/NMSliderViewController.git", :tag => "0.0.1" }
+=======
+  s.source       = { :git => "http://EXAMPLE/NMSliderViewController.git", :tag => "0.0.1" }
+>>>>>>> ad53974df5c1d3bf596bf67bc79f42ef96627d6c
 
 
   # If this Pod runs only on iOS or OS X, then specify the platform and
@@ -54,7 +58,11 @@ Pod::Spec.new do |s|
   # added to the Pods project. If the pattern is a directory then the
   # path will automatically have '*.{h,m,mm,c,cpp}' appended.
   #
+<<<<<<< HEAD
   s.source_files = 'Classes', '*.{h,m}'
+=======
+  s.source_files = 'Classes', 'Classes/**/*.{h,m}'
+>>>>>>> ad53974df5c1d3bf596bf67bc79f42ef96627d6c
 
   # A list of file patterns which select the header files that should be
   # made available to the application. If the pattern is a directory then the
