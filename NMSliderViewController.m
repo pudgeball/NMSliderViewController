@@ -69,6 +69,8 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		
 		_startingPoint = [[_navigationController view] center];
 		
+		_navigationController.view.backgroundColor = _topViewController.view.backgroundColor;
+		
 		_navigationController.view.layer.shadowColor = [UIColor blackColor].CGColor;
 		_navigationController.view.layer.shadowOffset = CGSizeMake(-10.0, 0.0);
 		_navigationController.view.layer.shadowOpacity = 0.5;
@@ -92,6 +94,8 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		[[topViewController view] setFrame:CGRectMake(0, 0, CGRectGetWidth(topViewController.view.frame), CGRectGetHeight(topViewController.view.frame))];
 
 		_topViewController = topViewController;
+		
+		_navigationController.view.backgroundColor = _topViewController.view.backgroundColor;
 	
 		[_navigationController setViewControllers:@[ _topViewController ]];
 		
@@ -255,6 +259,10 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	UIView *view = [tapGesture view];
 	
 	[self setState:SlideStateClosed forSliderView:view];
+}
+
+- (void)closeDrawer {
+	[self setState:SlideStateClosed forSliderView:_navigationController.view withVelocity:1.5 withAnimationOption:UIViewAnimationOptionCurveEaseOut withCompletionBlock:nil];
 }
 
 @end
