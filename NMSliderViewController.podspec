@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
 
   # Specify the license type. CocoaPods detects automatically the license file if it is named
   # 'LICENCE*.*' or 'LICENSE*.*', however if the name is different, specify it.
-  s.license      = 'BSD'
+  s.license      = {:type => 'BSD', :file => 'LICENSE'}
   # s.license      = { :type => 'MIT (example)', :file => 'FILE_LICENSE' }
 
   # Specify the authors of the library, with email addresses. You can often find
@@ -39,7 +39,7 @@ Pod::Spec.new do |s|
   # If this Pod runs only on iOS or OS X, then specify the platform and
   # the deployment target.
   #
-  # s.platform     = :ios, '5.0'
+  s.platform     = :ios, '5.0'
 
   # ――― MULTI-PLATFORM VALUES ――――――――――――――――――――――――――――――――――――――――――――――――― #
 
@@ -53,7 +53,7 @@ Pod::Spec.new do |s|
   # added to the Pods project. If the pattern is a directory then the
   # path will automatically have '*.{h,m,mm,c,cpp}' appended.
   #
-  s.source_files = 'Classes', '*.{h,m}'
+  s.source_files = 'NMSliderViewController'
 
   # A list of file patterns which select the header files that should be
   # made available to the application. If the pattern is a directory then the
@@ -84,7 +84,7 @@ Pod::Spec.new do |s|
   # Specify a list of frameworks that the application needs to link
   # against for this Pod to work.
   #
-  # s.framework  = 'SomeFramework'
+  s.framework  = 'QuartzCore'
   # s.frameworks = 'SomeFramework', 'AnotherFramework'
 
   # Specify a list of libraries that the application needs to link
