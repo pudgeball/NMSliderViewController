@@ -10,13 +10,13 @@ I made this for two reasons:
 
 This repo holds the code for NMSliderViewController.  This will be updated with a link to a demo soon.
 
-**How to set up**
+How to set up
+======================
 
 All you need to do is initialize the `slideViewController` with your `topViewController` and `bottomViewController` as parameters.
  _The code will take care of the rest_.
 
 
-======================
 In `AppDelegate.m`, initialize an NMSliderViewController object like this:
 
 `[[NMSliderViewController alloc] initWithTopViewController:topViewController andBottomViewController:bottomViewController];`
