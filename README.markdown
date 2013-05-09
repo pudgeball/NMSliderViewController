@@ -16,7 +16,7 @@ All you need to do is initialize the `slideViewController` with your `topViewCon
  _The code will take care of the rest_.
 
 
--------------------
+======================
 In `AppDelegate.m`, add the following:
 
 `slideViewController = [[NMSliderViewController alloc] initWithTopViewController:topViewController andBottomViewController:bottomViewController];`
