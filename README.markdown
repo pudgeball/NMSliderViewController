@@ -21,7 +21,7 @@ In `AppDelegate.m`, initialize an NMSliderViewController object like this:
 
 `[[NMSliderViewController alloc] initWithTopViewController:topViewController andBottomViewController:bottomViewController];`
 
-And set the root view controller here:
+And set the root view controller like this:
 
 `self.window.rootViewController = slideViewController;`
 
