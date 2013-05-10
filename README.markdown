@@ -13,7 +13,9 @@ This repo holds the code for NMSliderViewController.  This will be updated with 
 How to set up
 ======================
 
-All you need to do is initialize the `slideViewController` with your `topViewController` and `bottomViewController` as parameters.
+All you need to do is initialize an instance of NMSliderViewController with your `topViewController` and `bottomViewController` as parameters.
+
+The `topViewController` and `bottomViewController` can be of any type, can be be loaded from xibs or have their views written in code.
  _The code will take care of the rest_.
 
 
