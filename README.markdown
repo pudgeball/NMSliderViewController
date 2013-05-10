@@ -16,6 +16,7 @@ How to set up
 All you need to do is initialize an instance of NMSliderViewController with your `topViewController` and `bottomViewController` as parameters.
 
 The `topViewController` and `bottomViewController` can be of any type, can be be loaded from xibs or have their views written in code.
+
  _The code will take care of the rest_.
 
 
@@ -27,4 +28,10 @@ And set the root view controller like this:
 
 `self.window.rootViewController = slideViewController;`
 
-Thats it. Easy.
+That's all that's needed.
+
+-------
+
+###Upcoming Options
+ + Distance openned
+ + Auto-Hamburger button
