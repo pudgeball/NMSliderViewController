@@ -13,6 +13,7 @@
 
 - (id)initWithTopViewController:(UIViewController *)topViewController andBottomViewController:(UIViewController *)bottomViewController;
 - (void)setTopViewController:(UIViewController *)topViewController;
+- (void)hamburgerButtonWasPressed;
 
 - (void)closeDrawer;
 
