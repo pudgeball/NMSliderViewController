@@ -69,6 +69,13 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		
 		_startingPoint = [[_navigationController view] center];
 		
+		UIImage *hamburger = [UIImage imageNamed:@"Hamburger"];
+		
+		UIBarButtonItem *hamburgerButton = [[UIBarButtonItem alloc] initWithImage:hamburger style:UIBarButtonItemStyleBordered target:self action:@selector(hamburgerButtonWasPressed)];
+		
+		self.topViewController.navigationItem.leftBarButtonItem = hamburgerButton;
+
+		
 		_navigationController.view.backgroundColor = _topViewController.view.backgroundColor;
 		
 		_navigationController.view.layer.shadowColor = [UIColor blackColor].CGColor;
@@ -109,6 +116,16 @@ typedef NS_ENUM(NSInteger, SlideState) {
 	}
 	
 	[self setState:SlideStateClosed forSliderView:_navigationController.view withVelocity:1.5 withAnimationOption:UIViewAnimationOptionCurveEaseOut withCompletionBlock:completion];
+}
+
+- (void)hamburgerButtonWasPressed
+{
+	if (self.currentState == SlideStateClosed)
+	{
+		[self setState:SlideStateOpen forSliderView:_navigationController.view];
+	} else if (self.currentState == SlideStateOpen)
+		[self setState:SlideStateClosed forSliderView:_navigationController.view];
+
 }
 
 #pragma mark - SlideState Methods
