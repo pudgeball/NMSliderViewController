@@ -64,8 +64,13 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		
 		[self setCurrentState:SlideStateClosed];
 		
-		[[self view] addSubview:[_bottomViewController view]];
-		[[self view] addSubview:[_navigationController view]];
+		[self addChildViewController:_bottomViewController];
+		[self.view addSubview:_bottomViewController.view];
+		[_bottomViewController didMoveToParentViewController:self];
+		
+		[self addChildViewController:_navigationController];
+		[self.view addSubview:_navigationController.view];
+		[_navigationController didMoveToParentViewController:self];
 		
 		_startingPoint = [[_navigationController view] center];
 		
@@ -75,13 +80,12 @@ typedef NS_ENUM(NSInteger, SlideState) {
 		
 		self.topViewController.navigationItem.leftBarButtonItem = hamburgerButton;
 
-		
 		_navigationController.view.backgroundColor = _topViewController.view.backgroundColor;
 		
 		_navigationController.view.layer.shadowColor = [UIColor blackColor].CGColor;
-		_navigationController.view.layer.shadowOffset = CGSizeMake(-10.0, 0.0);
+		_navigationController.view.layer.shadowOffset = CGSizeMake(-1.0, 0.0);
 		_navigationController.view.layer.shadowOpacity = 0.5;
-		_navigationController.view.layer.shadowRadius = 5.0;
+		_navigationController.view.layer.shadowRadius = 2.5;
 		_navigationController.view.layer.shouldRasterize = YES;
 		_navigationController.view.layer.rasterizationScale = [UIScreen mainScreen].scale;
 		_navigationController.view.layer.shadowPath = [UIBezierPath bezierPathWithRect:_navigationController.view.layer.bounds].CGPath;
@@ -120,18 +124,16 @@ typedef NS_ENUM(NSInteger, SlideState) {
 
 - (void)hamburgerButtonWasPressed
 {
-	if (self.currentState == SlideStateClosed)
-	{
+	if (self.currentState == SlideStateClosed) {
 		[self setState:SlideStateOpen forSliderView:_navigationController.view];
-	} else if (self.currentState == SlideStateOpen)
+	} else if (self.currentState == SlideStateOpen) {
 		[self setState:SlideStateClosed forSliderView:_navigationController.view];
-
+	}
 }
 
 #pragma mark - SlideState Methods
 
-- (void)setState:(SlideState)state forSliderView:(UIView *)view
-{
+- (void)setState:(SlideState)state forSliderView:(UIView *)view {
 	[self setState:state forSliderView:view withVelocity:1.0 withAnimationOption:UIViewAnimationOptionCurveEaseOut withCompletionBlock:NULL];
 }
 
